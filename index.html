@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lớp 12A5 - THPT Rạch Kiến</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@900&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<style>
+    body { font-family: 'Quicksand', sans-serif; overflow-x: hidden; }
+    #wish-message { font-family: 'Dancing Script', cursive; }
+    .wish-title { font-family: 'Dancing Script', cursive; }
+
+    /* Hiệu ứng tiêu đề lấp lánh */
+    .animate-glow {
+      background: linear-gradient(90deg, #ff4d4d, #facc15, #ff4d4d);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shine 4s linear infinite;
+    }
+    @keyframes shine { to { background-position: 200% center; } }
+
+    /* Hiệu ứng hiện hình */
+    .fade-in-up { animation: fadeInUp 1s ease-out forwards; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+  /* Hiệu ứng bao lì xì rơi */
+.petal {
+  position: fixed;
+  top: -40px;
+  font-size: 24px;
+  z-index: 9999;
+  pointer-events: none;
+  animation: fall linear infinite;
+  user-select: none;
+}
+
+    @keyframes fall {
+      0% { transform: translateY(0vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+    }
+  /* Logo nổi bật */
+.logo {
+  font-size: 22px;
+  font-weight: 900;
+  background: linear-gradient(90deg, #fff6a0, #ffd700, #ffae00, #ffd700);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 
+      0 0 5px rgba(255, 215, 0, 0.6),
+      0 0 15px rgba(255, 140, 0, 0.4);
+  animation: logoShine 4s linear infinite;
+  transition: 0.3s;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+@keyframes logoShine {
+  0% { background-position: 0% }
+  100% { background-position: 200% }
+}
+
+  </style>
+</head>
+
+<body class="bg-zinc-900 text-gray-100">
+<header class="bg-red-700 text-white px-6 py-4 shadow-2xl border-b-2 border-yellow-500 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+
+    <!-- Logo -->
+    <h1 class="logo cursor-pointer text-center md:text-left"
+        onclick="showSection('home')">
+      ⚜ Lớp 12A5 - Rạch Kiến
+    </h1>
+
+    <!-- Menu -->
+    <div class="flex flex-wrap justify-center items-center gap-x-4 md:gap-x-6 text-[11px] md:text-sm font-bold w-full md:w-auto">
+  <button onclick="showSection('home')" class="hover:text-yellow-300 transition whitespace-nowrap">🏠 Trang chủ</button>
+  <button onclick="showSection('gallery')" class="hover:text-yellow-300 transition whitespace-nowrap">📸 Ảnh lớp</button>
+  <button onclick="showSection('events')" class="hover:text-yellow-300 transition whitespace-nowrap">📅 Sự kiện</button>
+  <button onclick="showSection('students')" class="hover:text-yellow-300 transition whitespace-nowrap">👩‍🎓 Học sinh</button>
+  
+  <div class="flex items-center gap-2 border-l border-yellow-500/50 pl-4 ml-2">
+    <button id="btnLoginOpen" onclick="document.getElementById('authModal').classList.remove('hidden')" 
+            class="bg-yellow-500 hover:bg-yellow-400 text-black px-3 py-1 rounded-full text-[10px] md:text-xs font-black transition transform active:scale-95 shadow-lg whitespace-nowrap">
+      🔑 ĐĂNG NHẬP
+    </button>
+    
+    <div id="user-display" class="hidden flex items-center gap-2 bg-black/30 rounded-full pr-3 pl-1 py-1 border border-yellow-500/30">
+      <img id="nav-avatar" src="default-avatar.png" class="w-6 h-6 rounded-full border border-yellow-500 object-cover">
+      <span id="user-name-nav" class="text-yellow-200 text-[10px] md:text-xs truncate max-w-[70px]">...</span>
+      <button onclick="logout()" class="text-red-400 hover:text-white text-xs ml-1 font-bold">⏏</button>
+    </div>
+  </div>
+</div>
+<div id="authModal" class="fixed inset-0 z-[9999] bg-black/90 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+    <div class="bg-zinc-800 w-full max-w-sm rounded-2xl border-2 border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.3)] relative overflow-hidden transform transition-all scale-100">
+        
+        <button onclick="document.getElementById('authModal').classList.add('hidden')" 
+                class="absolute top-2 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold z-10">&times;</button>
+        
+        <div class="bg-yellow-600 p-4 text-center">
+            <h3 class="font-bold text-black text-lg uppercase tracking-wider">🔐 Đăng nhập thành viên</h3>
+        </div>
+
+        <div class="p-6 flex flex-col gap-4">
+            <div>
+                <label class="text-xs text-yellow-500 ml-1">Email</label>
+                <input id="loginEmail" type="email" placeholder="Nhập email của bạn..." 
+                       class="w-full bg-black/40 border border-gray-600 text-white p-3 rounded-lg focus:border-yellow-500 outline-none transition-colors">
+            </div>
+            
+            <div>
+                <label class="text-xs text-yellow-500 ml-1">Mật khẩu</label>
+                <input id="loginPass" type="password" placeholder="Nhập mật khẩu..." 
+                       class="w-full bg-black/40 border border-gray-600 text-white p-3 rounded-lg focus:border-yellow-500 outline-none transition-colors">
+            </div>
+
+            <p id="loginError" class="text-red-400 text-xs text-center hidden bg-red-900/20 p-2 rounded border border-red-500/30"></p>
+            
+            <button onclick="handleLogin()" 
+                    class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold py-3 rounded-lg hover:from-yellow-400 hover:to-orange-400 transition transform hover:scale-[1.02] shadow-lg mt-2">
+                XÁC NHẬN VÀO LỚP
+            </button>
+        </div>
+    </div>
+</div>
+</header>
+
+
+
+<main class="px-4 md:px-8 max-w-7xl mx-auto min-h-screen">
+  <section id="section-home" class="py-20 text-center flex flex-col justify-center items-center min-h-[60vh]">
+    <div id="home-content" class="fade-in-up">
+      <div class="text-6xl mb-6">🧧</div>
+      <h2 class="wish-title animate-glow text-4xl md:text-7xl font-black mb-8 uppercase px-2">
+        Chúc Mừng Năm Mới 2026
+      </h2>
+      <div class="max-w-3xl mx-auto bg-red-900/40 backdrop-blur-md p-8 rounded-[2rem] border-2 border-yellow-600/50 shadow-2xl mb-10 mx-4">
+        <p id="wish-message" class="text-2xl md:text-4xl text-yellow-400 leading-relaxed whitespace-pre-line">
+          Chúc bạn một năm mới vạn sự như ý,
+          học tập bứt phá, luôn tràn đầy sức khoẻ!
+          "ĐẬU NGUYỆN VỌNG 1" 
+</p>
+
+      </div>
+      <div class="mt-6">
+  <button onclick="showSection('events')" 
+          class="bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-500 text-white font-black py-4 px-10 rounded-full shadow-[0_0_20px_rgba(250,204,21,0.5)] hover:shadow-[0_0_30px_rgba(250,204,21,0.8)] hover:scale-110 transition-all duration-300 uppercase tracking-wider flex items-center gap-3 mx-auto border-2 border-yellow-200">
+    <span>📜</span> Xem Menu Hội Xuân <span>🧧</span>
+  </button>
+  <div id="personal-dashboard" class="hidden w-full max-w-lg mb-8 fade-in-up px-4 relative z-10">
+    <div class="bg-zinc-800/90 backdrop-blur border-2 border-yellow-500 rounded-xl p-4 shadow-[0_0_30px_rgba(234,179,8,0.2)] flex items-center gap-4">
+        
+        <div class="relative">
+            <img id="my-avatar" src="default-avatar.png" class="w-20 h-20 rounded-full border-2 border-yellow-400 object-cover shadow-lg">
+            <div class="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[10px] font-bold px-2 rounded-full border border-white">YOU</div>
+        </div>
+        
+        <div class="text-left flex-1">
+            <h3 class="text-yellow-500 text-xs uppercase tracking-widest font-bold">Thành viên 12A5</h3>
+            <h2 id="my-name" class="text-xl font-bold text-white mb-1">Đang tải...</h2>
+            <p class="text-gray-400 text-xs mb-2">💌 <span id="my-email">...</span></p>
+            <p class="text-gray-300 text-xs italic border-l-2 border-yellow-600 pl-2">
+                "<span id="my-quote">...</span>"
+            </p>
+        </div>
+    </div>
+</div>
+</div>
+    </div>
+  </section>
+
+  <section id="section-students" class="hidden">
+    <h2 class="text-2xl font-bold mb-6 text-yellow-500 border-b border-yellow-500/30 pb-2">👩‍🎓 Danh sách học sinh</h2>
+    <div id="studentList" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+  </section>
+  <section id="section-gallery" class="hidden">
+  <h2 class="text-2xl font-bold mb-10 text-yellow-500 border-b border-yellow-500/30 pb-2">
+    📸 Hành Trình 3 Năm Thanh Xuân
+  </h2>
+
+  <div class="relative border-l-4 border-yellow-600/50 ml-4 space-y-16">
+
+    <!-- LỚP 10 -->
+    <div class="relative pl-10">
+      <div class="absolute -left-[14px] top-2 w-6 h-6 bg-yellow-500 rounded-full border-4 border-zinc-900"></div>
+      <h3 class="text-xl font-bold text-yellow-400 mb-4">📚 Năm Lớp 10 - Khởi Đầu</h3>
+      <img src="class10.jpg"
+           onclick="openModal(this.src)"
+           class="rounded-2xl shadow-2xl border-4 border-red-800 w-full max-w-3xl h-64 object-cover cursor-zoom-in hover:scale-105 transition duration-300">
+    </div>
+
+    <!-- LỚP 11 -->
+    <div class="relative pl-10">
+      <div class="absolute -left-[14px] top-2 w-6 h-6 bg-yellow-500 rounded-full border-4 border-zinc-900"></div>
+      <h3 class="text-xl font-bold text-yellow-400 mb-4">📖 Năm Lớp 11 - Trưởng Thành</h3>
+      <img src="class11.jpg"
+           onclick="openModal(this.src)"
+           class="rounded-2xl shadow-2xl border-4 border-red-800 w-full max-w-3xl h-64 object-cover cursor-zoom-in hover:scale-105 transition duration-300">
+    </div>
+
+    <!-- LỚP 12 -->
+    <div class="relative pl-10">
+      <div class="absolute -left-[14px] top-2 w-6 h-6 bg-yellow-500 rounded-full border-4 border-zinc-900"></div>
+      <h3 class="text-xl font-bold text-yellow-400 mb-4">🎓 Năm Lớp 12 - Bứt Phá</h3>
+      <img src="class12.jpg"
+           onclick="openModal(this.src)"
+           class="rounded-2xl shadow-2xl border-4 border-red-800 w-full max-w-3xl h-64 object-cover cursor-zoom-in hover:scale-105 transition duration-300">
+    </div>
+
+  </div>
+</section>
+
+
+  <section id="section-events" class="hidden">
+  <h2 class="text-2xl font-bold mb-6 text-yellow-500 border-b border-yellow-500/30 pb-2">
+    📅 Sự kiện nổi bật
+  </h2>
+  <!-- Khối chữ mô tả -->
+  <div class="bg-red-900/20 p-6 rounded-2xl border border-yellow-600/30 max-w-3xl mx-auto">
+    <h3 class="text-2xl font-bold text-yellow-400 text-center">
+      Hội Xuân 2026
+    </h3>
+    <p class="text-gray-300 mt-3 text-center">
+      Menu hội xuân của lớp 12A5 chúng mình nè.
+    </p>
+  </div>
+  <!-- Khối ảnh menu RIÊNG -->
+  <div class="mt-10 flex justify-center">
+    <img 
+      src="menu.jpg" 
+      alt="Menu Hội Xuân 2026"
+      class="w-full max-w-4xl rounded-2xl shadow-2xl border-4 border-yellow-600 hover:scale-105 transition-transform duration-300"
+    >
+  </div>
+</section>
+  <section id="section-home" class="py-20..."> <div id="personal-dashboard" class="hidden w-full max-w-2xl mb-8 fade-in-up px-4">
+      <div class="bg-gradient-to-r from-zinc-800 to-zinc-900 border border-yellow-500 rounded-xl p-6 shadow-2xl flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
+          <div class="absolute top-0 right-0 text-8xl opacity-5 rotate-12 select-none">🐲</div>
+          
+          <img id="my-avatar" src="default-avatar.png" class="w-24 h-24 rounded-full border-2 border-yellow-400 object-cover shadow-lg">
+          
+          <div class="text-center md:text-left flex-1">
+              <h3 class="text-yellow-500 text-xs uppercase tracking-widest mb-1">Hồ sơ của bạn</h3>
+              <h2 id="my-name" class="text-2xl font-bold text-white mb-1">Đang tải...</h2>
+              <p class="text-gray-400 text-sm mb-2">📧 <span id="my-email">...</span></p>
+              <div class="bg-black/30 p-2 rounded text-gray-300 text-sm italic">
+                  "<span id="my-quote">...</span>"
+              </div>
+          </div>
+      </div>
+  </div>
+  <div id="home-content" class="fade-in-up"> ... ```
+
+---
+
+### BƯỚC 3: Thêm Modal Đăng nhập (Form Login)
+Kéo xuống gần cuối file, đặt đoạn này **trước** thẻ đóng `</body>`:
+
+```html
+<div id="authModal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-[300] p-4 backdrop-blur-sm">
+    <div class="bg-zinc-800 w-full max-w-sm rounded-2xl border border-yellow-600 shadow-2xl relative">
+        <button onclick="document.getElementById('authModal').classList.add('hidden')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+        
+        <div class="p-6 flex flex-col gap-4">
+            <h3 class="text-xl font-bold text-yellow-500 text-center mb-2">🔐 Đăng nhập thành viên</h3>
+            
+            <input id="loginEmail" type="email" placeholder="Email..." class="bg-black/40 border border-gray-600 text-white p-3 rounded-lg focus:border-yellow-500 outline-none">
+            <input id="loginPass" type="password" placeholder="Mật khẩu..." class="bg-black/40 border border-gray-600 text-white p-3 rounded-lg focus:border-yellow-500 outline-none">
+            
+            <button onclick="handleLogin()" class="bg-yellow-500 text-black font-bold py-3 rounded-lg hover:bg-yellow-400 transition mt-2 shadow-[0_0_10px_rgba(250,204,21,0.4)]">
+                XÁC NHẬN
+            </button>
+            <p id="loginError" class="text-red-400 text-xs text-center hidden"></p>
+        </div>
+    </div>
+</div>
+</main>
+
+<footer class="bg-black/50 text-yellow-600 text-center p-8 mt-10 border-t border-yellow-900/30">
+  © 2026 - Lớp A5 THPT Rạch Kiến
+</footer>
+
+<div id="imageModal" 
+     class="fixed inset-0 z-[100] bg-black/95 hidden flex items-center justify-center p-4 cursor-zoom-out" 
+     onclick="closeModal()">
+  <button class="absolute top-5 right-5 text-white text-4xl">&times;</button>
+  <img id="modalImg" src="" 
+       class="max-w-full max-h-full rounded-lg shadow-2xl transition-transform duration-300 transform scale-95" 
+       onclick="event.stopPropagation()">
+</div>
+
+<script>
+  /* === HÀM PHÓNG TO ẢNH === */
+  function openModal(src) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImg');
+    modalImg.src = src;
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      modalImg.classList.remove('scale-95');
+      modalImg.classList.add('scale-100');
+    }, 10);
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImg');
+    modalImg.classList.add('scale-95');
+    modal.classList.add('hidden');
+  }
+
+  /* === CÁC LOGIC KHÁC (Firebase, showSection, hoa rơi...) giữ nguyên như cũ của bạn === */
+ function showSection(name) {
+  const sections = ['home', 'students', 'gallery', 'events'];
+  sections.forEach(s => {
+    const el = document.getElementById("section-" + s);
+    if (el) {
+      if (s === name) {
+        el.classList.remove("hidden");
+
+        if (name === 'students') {
+          loadStudents();
+        }
+
+        if (name === 'home') {
+          const content = document.getElementById("home-content");
+          content.classList.remove("fade-in-up");
+          void content.offsetWidth;
+          content.classList.add("fade-in-up");
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        el.classList.add("hidden");
+      }
+    }
+  });
+}
+
+  function createPetal() {
+  const petal = document.createElement('div');
+  petal.className = 'petal';
+
+  // Gán icon bao lì xì
+  petal.innerHTML = "🧧";
+
+  // Random kích thước
+  const size = Math.random() * 20 + 20; // 20px → 40px
+  petal.style.fontSize = size + "px";
+
+  // Random vị trí ngang
+  petal.style.left = Math.random() * 100 + "vw";
+
+  // Random tốc độ rơi
+  petal.style.animationDuration = Math.random() * 3 + 4 + "s";
+
+  document.body.appendChild(petal);
+
+  setTimeout(() => {
+    petal.remove();
+  }, 7000);
+}
+setInterval(createPetal, 400);
+ const firebaseConfig = { 
+ apiKey: "AIzaSyC8DW3w2ZbhZ8tnAA6ZJ-BQ69JMu0yVtzQ",
+  authDomain: "dsclass12a5.firebaseapp.com",
+  databaseURL: "https://dsclass12a5-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "dsclass12a5",
+  storageBucket: "dsclass12a5.firebasestorage.app",
+  messagingSenderId: "542384706583",
+  appId: "1:542384706583:web:10b1e914b5479cc93fb852"
+}; 
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+ function openStudentModal(student) {
+
+  document.getElementById("modalAvatar").src =
+    student.avatar || "default-avatar.png";
+
+  document.getElementById("modalName").innerText = student.name;
+  document.getElementById("modalBirthday").innerText =
+    "🎂 " + student.birthday;
+
+  document.getElementById("modalGender").innerText =
+    "👤 " + student.gender;
+
+  document.getElementById("modalDescription").innerText =
+    student.description || "Chưa có mô tả.";
+
+  const fbBox = document.getElementById("modalFacebookBox");
+  const fbText = document.getElementById("modalFacebookText");
+
+  if (student.facebook && student.facebook.trim() !== "") {
+
+    let link = student.facebook.trim();
+
+    if (!link.startsWith("http")) {
+      link = "https://" + link;
+    }
+
+    fbText.innerText = link;
+    fbBox.classList.remove("hidden");
+
+  } else {
+    fbBox.classList.add("hidden");
+  }
+
+  document.getElementById("studentModal").classList.remove("hidden");
+}
+ 
+function closeStudentModal() {
+  document.getElementById("studentModal").classList.add("hidden");
+}
+
+function uploadStudents() {
+  studentsData.forEach((student) => {
+    db.collection("students").add(student)
+      .then(() => {
+        console.log("Đã thêm:", student.name);
+      })
+      .catch((error) => {
+        console.error("Lỗi:", error);
+      });
+  });
+
+  alert("Đã upload xong 45 học sinh!");
+}
+function loadStudents() {
+  const container = document.getElementById("studentList");
+  container.innerHTML = "";
+
+  db.collection("students").get().then((snapshot) => {
+
+    let studentsArray = [];
+    snapshot.forEach((doc) => {
+      studentsArray.push(doc.data());
+    });
+
+    // 🔥 Sắp xếp theo TÊN (chữ cuối)
+    studentsArray.sort((a, b) => {
+      const lastNameA = a.name.split(" ").pop();
+      const lastNameB = b.name.split(" ").pop();
+
+      return lastNameA.localeCompare(lastNameB, 'vi');
+    });
+
+    // Giữ nguyên giao diện thẻ
+    studentsArray.forEach((student) => {
+  const card = document.createElement("div");
+  card.className = "bg-zinc-800 p-4 rounded-2xl shadow-xl border border-yellow-500/20 text-center hover:scale-105 transition duration-300 cursor-pointer";
+  card.innerHTML = `
+    <img src="${student.avatar || 'default-avatar.png'}"
+         class="w-24 h-24 mx-auto rounded-full object-cover border-4 border-yellow-500 mb-3">
+
+    <h3 class="text-yellow-400 font-bold">${student.name}</h3>
+  `;
+
+  card.onclick = () => openStudentModal(student);
+  container.appendChild(card);
+});
+;
+  });
+}/* === THÊM LOGIC ĐĂNG NHẬP TẠI ĐÂY === */
+const auth = firebase.auth(); // Khởi tạo Authentication
+
+// 1. Lắng nghe trạng thái Đăng nhập/Đăng xuất
+auth.onAuthStateChanged((user) => {
+    const loginBtn = document.getElementById("btnLoginOpen");
+    const userDisplay = document.getElementById("user-display");
+    const dashboard = document.getElementById("personal-dashboard");
+
+    if (user) {
+        // ==> NGƯỜI DÙNG ĐÃ ĐĂNG NHẬP
+        loginBtn.classList.add("hidden");    // Ẩn nút đăng nhập
+        userDisplay.classList.remove("hidden"); // Hiện tên trên menu
+        dashboard.classList.remove("hidden");   // Hiện bảng thông tin cá nhân
+        
+        // Gọi hàm tải dữ liệu riêng của người này
+        loadUserProfile(user.email);
+    } else {
+        // ==> CHƯA ĐĂNG NHẬP
+        loginBtn.classList.remove("hidden");
+        userDisplay.classList.add("hidden");
+        dashboard.classList.add("hidden");
+    }
+});
+
+// 2. Hàm lấy dữ liệu học sinh dựa trên Email
+function loadUserProfile(email) {
+    // Tìm trong Firestore xem ai có email trùng khớp
+    db.collection("students").where("email", "==", email).limit(1).get()
+    .then((snapshot) => {
+        if (!snapshot.empty) {
+            const data = snapshot.docs[0].data();
+            
+            // Cập nhật lên Menu
+            document.getElementById("user-name-nav").innerText = data.name;
+            document.getElementById("nav-avatar").src = data.avatar || 'default-avatar.png';
+
+            // Cập nhật lên Bảng cá nhân (Dashboard)
+            document.getElementById("my-name").innerText = data.name;
+            document.getElementById("my-avatar").src = data.avatar || 'default-avatar.png';
+            document.getElementById("my-email").innerText = email;
+            document.getElementById("my-quote").innerText = data.description || "Hãy cập nhật mô tả của bạn!";
+        } else {
+            // Email đúng nhưng không khớp với học sinh nào
+            document.getElementById("user-name-nav").innerText = "Khách";
+            document.getElementById("my-name").innerText = "Chưa có hồ sơ";
+            document.getElementById("my-quote").innerText = "Email này chưa được liên kết với học sinh nào trong lớp.";
+        }
+    })
+    .catch(err => console.error("Lỗi tải profile:", err));
+}
+
+// 3. Xử lý nút XÁC NHẬN trong Modal
+function handleLogin() {
+    const email = document.getElementById("loginEmail").value;
+    const pass = document.getElementById("loginPass").value;
+    const errorMsg = document.getElementById("loginError");
+
+    if(!email || !pass) {
+        errorMsg.innerText = "Vui lòng nhập đủ thông tin!";
+        errorMsg.classList.remove("hidden");
+        return;
+    }
+
+    auth.signInWithEmailAndPassword(email, pass)
+        .then(() => {
+            // Đăng nhập thành công
+            document.getElementById("authModal").classList.add("hidden"); // Tắt modal
+            showSection('home'); // Quay về trang chủ để thấy bảng thông tin
+            alert("Đăng nhập thành công! Chào mừng bạn quay lại.");
+        })
+        .catch((error) => {
+            // Đăng nhập thất bại
+            errorMsg.innerText = "Sai email hoặc mật khẩu!";
+            errorMsg.classList.remove("hidden");
+            console.error(error);
+        });
+}
+
+// 4. Xử lý Đăng xuất
+function logout() {
+    if(confirm("Bạn có chắc muốn đăng xuất không?")) {
+        auth.signOut().then(() => {
+            alert("Đã đăng xuất.");
+        });
+    }
+}
+</script>
+  <!-- Modal thông tin học sinh -->
+<div id="studentModal"
+     class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-[200] p-4">
+  <div class="bg-zinc-900 max-w-md w-full rounded-2xl p-6 border border-yellow-500 shadow-2xl relative">
+    <button onclick="closeStudentModal()"
+      class="absolute top-3 right-4 text-white text-2xl">&times;</button>
+
+    <img id="modalAvatar"
+         class="w-32 h-32 rounded-full mx-auto object-cover border-4 border-yellow-500 mb-4">
+
+    <h3 id="modalName"
+        class="text-yellow-400 text-xl font-bold text-center"></h3>
+
+    <p id="modalBirthday" class="text-center text-gray-300 mt-2"></p>
+<p id="modalGender" class="text-center text-gray-400"></p>
+
+<!-- Logo Facebook -->
+<div id="modalFacebookBox"
+     class="hidden mt-3 flex items-center gap-3 bg-blue-600/20 p-3 rounded-xl border border-blue-500/30">
+
+  <!-- Icon Facebook -->
+  <div class="w-9 h-9 flex items-center justify-center rounded-full bg-blue-600 shadow">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         viewBox="0 0 24 24"
+         fill="white"
+         class="w-5 h-5">
+      <path d="M22 12a10 10 0 1 0-11.63 9.88v-6.99H7.9V12h2.47V9.8c0-2.44 1.46-3.8 3.7-3.8 1.07 0 2.2.19 2.2.19v2.42h-1.24c-1.22 0-1.6.76-1.6 1.54V12h2.72l-.43 2.89h-2.29v6.99A10 10 0 0 0 22 12z"/>
+    </svg>
+  </div>
+  <!-- Link copy được -->
+  <p id="modalFacebookText"
+     class="text-blue-300 text-sm break-all select-text cursor-text">
+  </p>
+
+</div>
+
+<div class="mt-4 bg-yellow-500/10 p-4 rounded-xl border border-yellow-500/20">
+  <p id="modalDescription" class="text-gray-200 text-sm leading-relaxed"></p>
+</div>
+</div>
+</div>
+</body>
+</html>
+
+
+
+
+
+
