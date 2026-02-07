@@ -158,37 +158,38 @@
 </p>
 
       </div>
-   <div class="mt-6">
-        <button onclick="showSection('events')" ...>
+  <div class="mt-6">
+        <button onclick="showSection('events')" 
+                class="bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-500 text-white font-black py-4 px-10 rounded-full shadow-[0_0_20px_rgba(250,204,21,0.5)] hover:shadow-[0_0_30px_rgba(250,204,21,0.8)] hover:scale-110 transition-all duration-300 uppercase tracking-wider flex items-center gap-3 mx-auto border-2 border-yellow-200">
           <span>📜</span> Xem Menu Hội Xuân <span>🧧</span>
         </button>
       </div>
 
- <div id="personal-dashboard" class="hidden w-full flex justify-center mt-10 fade-in-up px-4">
-     <div class="bg-zinc-800/90 backdrop-blur border-2 border-yellow-500 rounded-xl p-4 shadow-xl flex items-center gap-4 max-w-sm">
+      <div id="personal-dashboard" class="hidden w-full flex justify-center mt-10 fade-in-up px-4">
+        <div class="bg-zinc-800/90 backdrop-blur border-2 border-yellow-500 rounded-xl p-4 shadow-xl flex items-center gap-4 max-w-sm">
           <img id="my-avatar" src="default-avatar.png" class="w-16 h-16 rounded-full border-2 border-yellow-400 object-cover">
-           <div class="text-left text-sm">
-               <p class="text-yellow-500 font-bold text-[10px] uppercase">Thành viên 12A5</p>
-               <h2 id="my-name" class="font-bold text-white uppercase">...</h2>
-               <p id="my-quote" class="text-gray-400 text-[11px] italic line-clamp-2"></p>
-          </div>
-       </div> 
- </div>
-
-    </div>
-        
-        <div class="text-left flex-1">
-            <h3 class="text-yellow-500 text-xs uppercase tracking-widest font-bold">Thành viên 12A5</h3>
-            <h2 id="my-name" class="text-xl font-bold text-white mb-1">Đang tải...</h2>
-            <p class="text-gray-400 text-xs mb-2">💌 <span id="my-email">...</span></p>
-            <p class="text-gray-300 text-xs italic border-l-2 border-yellow-600 pl-2">
-                "<span id="my-quote">...</span>"
+          <div class="text-left text-sm">
+            <p class="text-yellow-500 font-bold text-[10px] uppercase">Thành viên 12A5</p>
+            <h2 id="my-name" class="font-bold text-white uppercase">Đang tải...</h2>
+            <p class="text-gray-400 text-[10px] mb-1">📧 <span id="my-email">...</span></p> 
+            <p class="text-gray-300 text-[11px] italic border-l-2 border-yellow-600 pl-2">
+              "<span id="my-quote">...</span>"
             </p>
+          </div>
         </div>
-    </div>
-</div>
-</div>
-    </div>
+      </div>
+
+    </div> </section>
+
+### 2. Các phần đã bỏ đi (Tại sao nó lỗi?):
+1.  **Dư thừa `</div>`**: Trong code bạn gửi có tới 4-5 thẻ `</div>` đóng liên tiếp ở cuối. Điều này khiến trình duyệt hiểu lầm là bạn đã đóng toàn bộ trang web hoặc đóng thẻ bao nút bấm quá sớm, làm cái khung vàng của nút bị vỡ.
+2.  **Lặp code**: Bạn đang có 2 cụm hiển thị thông tin (`text-left flex-1` và `text-left text-sm`). Mình đã gộp chúng lại thành 1 cụm duy nhất đẹp hơn, có cả icon email 💌 và vạch kẻ vàng bên trái phần mô tả cho sang trọng.
+3.  **Thứ tự**: Mình đã ép nút "Xem Menu" nằm trong một `div` riêng (`mt-6`) để nó không bị dính chùm vào bảng thông tin cá nhân.
+
+### 3. Lưu ý nhỏ:
+Nếu sau khi thay code mà bảng cá nhân vẫn chưa hiện, bạn hãy kiểm tra lại trong file `index.html` của bạn xem đã có hàm `loadUserProfile` trong thẻ `<script>` chưa nhé. 
+
+Bạn thử thay đoạn này vào, nút bấm sẽ to rõ và bảng cá nhân sẽ nằm ngay ngắn ở dưới!
   </section>
 
   <section id="section-students" class="hidden">
@@ -608,6 +609,7 @@ function logout() {
 </div>
 </body>
 </html>
+
 
 
 
