@@ -158,18 +158,24 @@
 </p>
 
       </div>
-      <div class="mt-6">
-  <button onclick="showSection('events')" 
-          class="bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-500 text-white font-black py-4 px-10 rounded-full shadow-[0_0_20px_rgba(250,204,21,0.5)] hover:shadow-[0_0_30px_rgba(250,204,21,0.8)] hover:scale-110 transition-all duration-300 uppercase tracking-wider flex items-center gap-3 mx-auto border-2 border-yellow-200">
-    <span>📜</span> Xem Menu Hội Xuân <span>🧧</span>
-  </button>
-  <div id="personal-dashboard" class="hidden w-full max-w-lg mb-8 fade-in-up px-4 relative z-10">
-    <div class="bg-zinc-800/90 backdrop-blur border-2 border-yellow-500 rounded-xl p-4 shadow-[0_0_30px_rgba(234,179,8,0.2)] flex items-center gap-4">
-        
-        <div class="relative">
-            <img id="my-avatar" src="default-avatar.png" class="w-20 h-20 rounded-full border-2 border-yellow-400 object-cover shadow-lg">
-            <div class="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[10px] font-bold px-2 rounded-full border border-white">YOU</div>
-        </div>
+   <div class="mt-6">
+        <button onclick="showSection('events')" ...>
+          <span>📜</span> Xem Menu Hội Xuân <span>🧧</span>
+        </button>
+      </div>
+
+      <div id="personal-dashboard" class="hidden w-full flex justify-center mt-10 fade-in-up px-4">
+          <div class="bg-zinc-800/90 backdrop-blur border-2 border-yellow-500 rounded-xl p-4 shadow-xl flex items-center gap-4 max-w-sm">
+              <img id="my-avatar" src="default-avatar.png" class="w-16 h-16 rounded-full border-2 border-yellow-400 object-cover">
+              <div class="text-left text-sm">
+                  <p class="text-yellow-500 font-bold text-[10px] uppercase">Thành viên 12A5</p>
+                  <h2 id="my-name" class="font-bold text-white uppercase">...</h2>
+                  <p id="my-quote" class="text-gray-400 text-[11px] italic line-clamp-2"></p>
+              </div>
+          </div>
+      </div>
+
+    </div>
         
         <div class="text-left flex-1">
             <h3 class="text-yellow-500 text-xs uppercase tracking-widest font-bold">Thành viên 12A5</h3>
@@ -265,7 +271,7 @@
           </div>
       </div>
   </div>
-  <div id="home-content" class="fade-in-up"> ... ```
+  <div id="home-content" class="fade-in-up">
 
 
 <div id="authModal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-[300] p-4 backdrop-blur-sm">
@@ -602,6 +608,7 @@ function logout() {
 </div>
 </body>
 </html>
+
 
 
 
