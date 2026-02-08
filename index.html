@@ -168,14 +168,14 @@
       <div id="personal-dashboard" class="hidden w-full flex justify-center mt-10 fade-in-up px-4">
         <div class="bg-zinc-800/90 backdrop-blur border-2 border-yellow-500 rounded-xl p-4 shadow-xl flex items-center gap-4 max-w-sm">
           <img id="my-avatar" src="default-avatar.png" class="w-16 h-16 rounded-full border-2 border-yellow-400 object-cover">
-          <div class="text-left text-sm">
-            <p class="text-yellow-500 font-bold text-[10px] uppercase">Thành viên 12A5</p>
-            <h2 id="my-name" class="font-bold text-white uppercase">Đang tải...</h2>
-            <p class="text-gray-400 text-[10px] mb-1">📧 <span id="my-email">...</span></p> 
-            <p class="text-gray-300 text-[11px] italic border-l-2 border-yellow-600 pl-2">
-              "<span id="my-quote">...</span>"
-            </p>
-          </div>
+         <div class="text-left text-sm">
+    <p class="text-yellow-500 font-bold text-[10px] uppercase">Thành viên 12A5</p>
+    <h2 id="my-name" class="font-bold text-white uppercase">...</h2>
+    <p class="text-gray-400 text-[10px] mb-1">📧 <span id="my-email">...</span></p> 
+    <p class="text-gray-300 text-[11px] italic border-l-2 border-yellow-600 pl-2">
+      "<span id="my-quote">...</span>"
+    </p>
+</div>
         </div>
       </div>
 
@@ -505,17 +505,23 @@ auth.onAuthStateChanged((user) => {
 
 // 2. Hàm lấy dữ liệu học sinh dựa trên CCCD
 function loadUserProfile(email) {
-    // Lấy lại số CCCD từ email ảo (bỏ phần @a5.com)
     const cccdFromEmail = email.split('@')[0];
-
+// Lấy lại số CCCD từ email ảo (bỏ phần @a5.com)
     db.collection("students").where("cccd", "==", cccdFromEmail).limit(1).get()
     .then((snapshot) => {
         if (!snapshot.empty) {
             const data = snapshot.docs[0].data();
+            
+            // Hiển thị tên và ảnh
             document.getElementById("user-name-nav").innerText = data.name;
-            document.getElementById("nav-avatar").src = data.avatar || 'default-avatar.png';
             document.getElementById("my-name").innerText = data.name;
+            document.getElementById("nav-avatar").src = data.avatar || 'default-avatar.png';
             document.getElementById("my-avatar").src = data.avatar || 'default-avatar.png';
+            
+            // ĐIỀU BẠN CẦN: Hiển thị giá trị email từ Firestore lên giao diện
+            // Nếu trong Firestore bạn đặt tên trường là "email", hãy dùng data.email
+            document.getElementById("my-email").innerText = data.email || email; 
+
             document.getElementById("my-quote").innerText = data.description || "Học tập bứt phá!";
         }
     });
@@ -599,6 +605,7 @@ function logout() {
 </div>
 </body>
 </html>
+
 
 
 
