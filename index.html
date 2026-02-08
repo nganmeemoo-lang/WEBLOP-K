@@ -119,8 +119,8 @@
 
         <div class="p-6 flex flex-col gap-4">
             <div>
-                <label class="text-xs text-yellow-500 ml-1">Email</label>
-                <input id="loginEmail" type="email" placeholder="Nhập email của bạn..." 
+                <label class="text-xs text-yellow-500 ml-1">Số CCCD</label>
+                <input id="loginCCCD" type="text" placeholder="Nhập số cccd của bạn..." 
                        class="w-full bg-black/40 border border-gray-600 text-white p-3 rounded-lg focus:border-yellow-500 outline-none transition-colors">
             </div>
             
@@ -503,57 +503,47 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// 2. Hàm lấy dữ liệu học sinh dựa trên Email
+// 2. Hàm lấy dữ liệu học sinh dựa trên CCCD
 function loadUserProfile(email) {
-    // Tìm trong Firestore xem ai có email trùng khớp
-    db.collection("students").where("email", "==", email).limit(1).get()
+    // Lấy lại số CCCD từ email ảo (bỏ phần @a5.com)
+    const cccdFromEmail = email.split('@')[0];
+
+    db.collection("students").where("cccd", "==", cccdFromEmail).limit(1).get()
     .then((snapshot) => {
         if (!snapshot.empty) {
             const data = snapshot.docs[0].data();
-            
-            // Cập nhật lên Menu
             document.getElementById("user-name-nav").innerText = data.name;
             document.getElementById("nav-avatar").src = data.avatar || 'default-avatar.png';
-
-            // Cập nhật lên Bảng cá nhân (Dashboard)
             document.getElementById("my-name").innerText = data.name;
             document.getElementById("my-avatar").src = data.avatar || 'default-avatar.png';
-            document.getElementById("my-email").innerText = email;
-            document.getElementById("my-quote").innerText = data.description || "Hãy cập nhật mô tả của bạn!";
-        } else {
-            // Email đúng nhưng không khớp với học sinh nào
-            document.getElementById("user-name-nav").innerText = "Khách";
-            document.getElementById("my-name").innerText = "Chưa có hồ sơ";
-            document.getElementById("my-quote").innerText = "Email này chưa được liên kết với học sinh nào trong lớp.";
+            document.getElementById("my-quote").innerText = data.description || "Học tập bứt phá!";
         }
-    })
-    .catch(err => console.error("Lỗi tải profile:", err));
+    });
 }
 
 // 3. Xử lý nút XÁC NHẬN trong Modal
 function handleLogin() {
-    const email = document.getElementById("loginEmail").value;
+    const cccd = document.getElementById("loginCCCD").value.trim();
     const pass = document.getElementById("loginPass").value;
     const errorMsg = document.getElementById("loginError");
 
-    if(!email || !pass) {
-        errorMsg.innerText = "Vui lòng nhập đủ thông tin!";
+    if(!cccd || !pass) {
+        errorMsg.innerText = "Vui lòng nhập đủ CCCD và Mật khẩu!";
         errorMsg.classList.remove("hidden");
         return;
     }
 
-    auth.signInWithEmailAndPassword(email, pass)
+    // Mẹo: Biến CCCD thành Email ảo để gửi lên Firebase
+    const emailVirtual = cccd + "@a5.com";
+
+    auth.signInWithEmailAndPassword(emailVirtual, pass)
         .then(() => {
-            // Đăng nhập thành công
-            document.getElementById("authModal").classList.add("hidden"); // Tắt modal
-            showSection('home'); // Quay về trang chủ để thấy bảng thông tin
-            alert("Đăng nhập thành công! Chào mừng bạn quay lại.");
+            document.getElementById("authModal").classList.add("hidden");
+            alert("Đăng nhập thành công!");
         })
         .catch((error) => {
-            // Đăng nhập thất bại
-            errorMsg.innerText = "Sai email hoặc mật khẩu!";
+            errorMsg.innerText = "Sai CCCD hoặc mật khẩu!";
             errorMsg.classList.remove("hidden");
-            console.error(error);
         });
 }
 
@@ -609,6 +599,7 @@ function logout() {
 </div>
 </body>
 </html>
+
 
 
 
