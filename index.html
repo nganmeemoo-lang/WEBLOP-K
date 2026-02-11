@@ -100,11 +100,23 @@
       🔑 ĐĂNG NHẬP
     </button>
     
-    <div id="user-display" class="hidden flex items-center gap-2 bg-black/30 rounded-full pr-3 pl-1 py-1 border border-yellow-500/30">
-      <img id="nav-avatar" src="default-avatar.png" class="w-6 h-6 rounded-full border border-yellow-500 object-cover">
-      <span id="user-name-nav" class="text-yellow-200 text-[10px] md:text-xs truncate max-w-[70px]">...</span>
-      <button onclick="logout()" class="text-red-400 hover:text-white text-xs ml-1 font-bold">⏏</button>
-    </div>
+   <div id="user-display" class="hidden relative group">
+  <div onclick="toggleUserMenu()" class="flex items-center gap-2 bg-black/30 rounded-full pr-3 pl-1 py-1 border border-yellow-500/30 cursor-pointer hover:bg-black/50 transition">
+    <img id="nav-avatar" src="default-avatar.png" class="w-7 h-7 rounded-full border border-yellow-500 object-cover">
+    <span id="user-name-nav" class="text-yellow-200 text-[10px] md:text-xs truncate max-w-[80px]">...</span>
+    <span class="text-[8px] text-yellow-500">▼</span>
+  </div>
+
+  <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-zinc-800 border border-yellow-600 rounded-xl shadow-2xl overflow-hidden z-[100]">
+    <button onclick="showPersonalInfo()" class="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-yellow-500 hover:text-black transition flex items-center gap-2">
+      👤 Thông tin cá nhân
+    </button>
+    <div class="border-t border-gray-700"></div>
+    <button onclick="logout()" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-600 hover:text-white transition flex items-center gap-2">
+      ⏏ Đăng xuất
+    </button>
+  </div>
+</div>
   </div>
 </div>
 <div id="authModal" class="fixed inset-0 z-[9999] bg-black/90 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
@@ -273,7 +285,30 @@ Bạn thử thay đoạn này vào, nút bấm sẽ to rõ và bảng cá nhân 
       </div>
   </div>
   <div id="home-content" class="fade-in-up">
-
+<div id="personalInfoModal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-[300] p-4 backdrop-blur-md">
+    <div class="bg-zinc-900 w-full max-w-sm rounded-2xl border-2 border-yellow-500 overflow-hidden shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+        <div class="bg-yellow-500 p-4 flex justify-between items-center">
+            <h3 class="font-bold text-black uppercase">Hồ sơ cá nhân</h3>
+            <button onclick="document.getElementById('personalInfoModal').classList.add('hidden')" class="text-black font-bold text-xl">&times;</button>
+        </div>
+        <div class="p-6 text-center">
+            <img id="detail-avatar" src="default-avatar.png" class="w-24 h-24 rounded-full mx-auto border-4 border-yellow-500 mb-4 object-cover">
+            <h2 id="detail-name" class="text-xl font-bold text-white uppercase">...</h2>
+            <p class="text-yellow-500 text-sm mb-4">Số CCCD: <span id="detail-cccd">...</span></p>
+            
+            <div class="space-y-3 text-left">
+                <div class="bg-black/40 p-3 rounded-lg border border-gray-700">
+                    <p class="text-xs text-gray-500 uppercase">Số điện thoại</p>
+                    <p id="detail-phone" class="text-gray-200">Đang cập nhật...</p>
+                </div>
+                <div class="bg-black/40 p-3 rounded-lg border border-gray-700">
+                    <p class="text-xs text-gray-500 uppercase">Ngày sinh</p>
+                    <p id="detail-birthday" class="text-gray-200">...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div id="authModal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-[300] p-4 backdrop-blur-sm">
     <div class="bg-zinc-800 w-full max-w-sm rounded-2xl border border-yellow-600 shadow-2xl relative">
@@ -503,28 +538,51 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// 2. Hàm lấy dữ liệu học sinh dựa trên CCCD
+let currentUserData = null; // Biến lưu dữ liệu người dùng đang đăng nhập
+
+// Cập nhật hàm loadUserProfile
 function loadUserProfile(email) {
     const cccdFromEmail = email.split('@')[0];
-// Lấy lại số CCCD từ email ảo (bỏ phần @a5.com)
     db.collection("students").where("cccd", "==", cccdFromEmail).limit(1).get()
     .then((snapshot) => {
         if (!snapshot.empty) {
-            const data = snapshot.docs[0].data();
+            currentUserData = snapshot.docs[0].data(); // Lưu dữ liệu vào biến
             
-            // Hiển thị tên và ảnh
-            document.getElementById("user-name-nav").innerText = data.name;
-            document.getElementById("my-name").innerText = data.name;
-            document.getElementById("nav-avatar").src = data.avatar || 'default-avatar.png';
-            document.getElementById("my-avatar").src = data.avatar || 'default-avatar.png';
-            
-            // ĐIỀU BẠN CẦN: Hiển thị giá trị email từ Firestore lên giao diện
-            // Nếu trong Firestore bạn đặt tên trường là "email", hãy dùng data.email
-            document.getElementById("my-email").innerText = data.email || email; 
-
-            document.getElementById("my-quote").innerText = data.description || "Học tập bứt phá!";
+            document.getElementById("user-name-nav").innerText = currentUserData.name;
+            document.getElementById("my-name").innerText = currentUserData.name;
+            document.getElementById("nav-avatar").src = currentUserData.avatar || 'default-avatar.png';
+            document.getElementById("my-avatar").src = currentUserData.avatar || 'default-avatar.png';
+            document.getElementById("my-email").innerText = currentUserData.email || email; 
+            document.getElementById("my-quote").innerText = currentUserData.description || "Học tập bứt phá!";
         }
     });
+}
+
+// Thêm hàm đóng/mở menu nhỏ
+function toggleUserMenu() {
+    const dropdown = document.getElementById('user-dropdown');
+    dropdown.classList.toggle('hidden');
+    
+    // Đóng khi bấm ra ngoài
+    window.addEventListener('click', function(e){   
+      if (!document.getElementById('user-display').contains(e.target)){
+        dropdown.classList.add('hidden');
+      }
+    }, {once: true});
+}
+
+// Hàm hiển thị Modal thông tin chi tiết
+function showPersonalInfo() {
+    if (!currentUserData) return;
+    
+    document.getElementById("detail-avatar").src = currentUserData.avatar || 'default-avatar.png';
+    document.getElementById("detail-name").innerText = currentUserData.name;
+    document.getElementById("detail-cccd").innerText = currentUserData.cccd;
+    document.getElementById("detail-birthday").innerText = currentUserData.birthday || "Chưa rõ";
+    document.getElementById("detail-phone").innerText = currentUserData.phone || "Chưa cập nhật";
+    
+    document.getElementById("personalInfoModal").classList.remove("hidden");
+    document.getElementById("user-dropdown").classList.add("hidden");
 }
 
 // 3. Xử lý nút XÁC NHẬN trong Modal
@@ -605,6 +663,7 @@ function logout() {
 </div>
 </body>
 </html>
+
 
 
 
